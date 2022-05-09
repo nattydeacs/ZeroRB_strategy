@@ -15,7 +15,7 @@ twentytwentyPoints <- read.csv("standard_points_scored/2021.csv")
 ###############
 set.seed(5)
 
-NumberOfSimulations <- 10
+NumberOfSimulations <- 1000
 
 teams <- c("team_1", "team_2", "team_3", "team_4", "team_5", "team_6", "team_7",
            "team_8", "team_9", "team_10")
@@ -262,7 +262,23 @@ ConsolidatedData <- rbind(allSims0RBClean, allSimsClean)
 ggplot() +
   geom_density(data = ConsolidatedData, aes(x = totalPoints, group = Strategy, fill = Strategy), alpha=.5) +
   facet_grid(teamPick~.) 
+
+ggplot(ConsolidatedData, aes(x = totalPoints, y = teamPick, group = teamPick)) +
+  geom_density_ridges()
+
+ggplot(ConsolidatedData, aes(x = totalPoints, fill = Strategy)) +
+  geom_histogram(alpha=0.3, position = 'identity') 
+
+
+ggplot(ConsolidatedData, aes(x = Strategy, y = totalPoints, fill = Strategy)) +
+  geom_boxplot() +
+  facet_wrap(.~teamPick, nrow = 4, ncol = 3) 
+
   
 
+write.csv(ConsolidatedData, "zeroRBdata.csv")
+
+write.csv(allSims0RBClean, "allSims0RBClean.csv")
+write.csv(allSimsClean, "allSimsClean")
 
 
