@@ -1,18 +1,10 @@
 #https://fantasydata.com/nfl/adp?season=2021&leaguetype=1
 
-
-
-#positionTable <- data.frame(table(roster$Position)) 
-#positionTable <- positionTable %>% 
- # mutate(is_pos_full = mapply(full_func, positionTable$Var1, positionTable$Freq))
-
-
 #####################
 #importing data
 #####################
 library(tidyverse)
 library(ggridges)
-
 
 adpFiles <- paste0("standard_scoring_adp/adp_", 2017:2021, ".csv")
 adp_data <- lapply(adpFiles, read.csv)
@@ -27,16 +19,12 @@ names(points_data) <- (2017:2021)
 ###############
 
 set.seed(5)
-
-NumberOfSimulations <- 2
-
 teams <- c("team_1", "team_2", "team_3", "team_4", "team_5", "team_6", "team_7",
            "team_8", "team_9", "team_10")
 years <- c("2017", "2018","2019","2020","2021")
-
-draftPick <- c(1:160)
-round <- rep(c(1:16),each=10)
-teamPick <- rep(c(teams, rev(teams)), times =8)
+#draftPick <- c(1:160)
+#round <- rep(c(1:16),each=10)
+#teamPick <- rep(c(teams, rev(teams)), times =8)
 
 #function to tell if roster is full at position
 full_func <- function(position, count){
@@ -277,11 +265,23 @@ simulate0RBDraft <- function(year, NumberOfSimulations) {
 
 standard <- c()
 zero <- c()
-simulations <- 10000
+simulations <- 1000
 for(year in years){
   standard <- rbind(standard, simulateStandardDraft(year, simulations))
-  zero <- rbind(zero, simulate0RBDraft(year, simulations))
+  print(year)
 }
+
+for(year in years){
+zero <- rbind(zero, simulate0RBDraft(year, simulations))
+print(year)
+}
+
+
+startTime <- Sys.time()
+simulate0RBDraft("2017", 1)
+endTime <- Sys.time()
+# prints recorded time
+print(endTime - startTime)
 data <- rbind(standard, zero)
 
 ###############
