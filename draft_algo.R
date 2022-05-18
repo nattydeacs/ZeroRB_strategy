@@ -10,6 +10,8 @@ adpFiles <- paste0("standard_scoring_adp/adp_", 2017:2021, ".csv")
 adp_data <- lapply(adpFiles, read.csv)
 names(adp_data) <- (2017:2021)
 
+
+
 pointsFiles <- paste0("standard_points_scored/", 2017:2021, ".csv")
 points_data <- lapply(pointsFiles, read.csv)
 names(points_data) <- (2017:2021)
@@ -31,10 +33,10 @@ full_func <- function(position, count){
       if (position == "QB" & count >=1){
         return("Yes")
       }
-      if (position == "RB" & count >=4){
+      if (position == "RB" & count >=3){
         return("Yes")
       }
-      if (position == "TE" & count >=1){
+      if (position == "TE" & count >=2){
         return("Yes")
       }
       if (position == "K" & count >=1){
@@ -43,7 +45,7 @@ full_func <- function(position, count){
       if (position == "DST" & count >=1){
         return("Yes")
       }
-      if (position == "WR" & count >=4){
+      if (position == "WR" & count >=3){
         return("Yes")
       }
       else{
@@ -52,7 +54,6 @@ full_func <- function(position, count){
 }
 
 varianceGeneerator<-sample(c(0,0.5,1), size =1, prob = c(0.6, 0.3, 0.1))
-x<-simulateStandardDraft("2021", 2)
 #function to simulate drafts using standard strategy
 simulateStandardDraft <- function(year, NumberOfSimulations) {
   draftPick <- c(1:160)
@@ -67,11 +68,13 @@ simulateStandardDraft <- function(year, NumberOfSimulations) {
       add_column(Name = NA) %>%
       add_column(Position = NA) 
     remainingPlayers <- adp_data[[year]] %>% 
-      select(c("Rank", "PlayerID", "Name", "Position"))
+      select(c("Rank", "PlayerID", "Name", "Position"))%>%
+      filter(Position != "CB", Position != "SS", Position != "DE", 
+             Position != "OLB", Position != "ILB", Position != "FB")
     remainingPlayersPosFilter <-remainingPlayers
     positionTable <- c()
     for (val in draftPick) {
-      if (val<=100) {
+      if (val<=90) {
         roster <- filter(draftOrder, teamPick == draftOrder[val, "teamPick"])
         positionTable <- data.frame(table(roster$Position)) 
         positionTable <- positionTable %>% mutate(is_pos_full = mapply(full_func, positionTable$Var1, positionTable$Freq))
@@ -81,7 +84,7 @@ simulateStandardDraft <- function(year, NumberOfSimulations) {
         draftOrder[val,c(4:7)] <- pick
         remainingPlayers <- filter(remainingPlayers, PlayerID != pick$PlayerID)
       }
-      else if (val>=100 & val<=140) {
+      else if (val>=91 & val<=140) {
         roster <- filter(draftOrder, teamPick == draftOrder[val, "teamPick"])
         pick <- remainingPlayers[1+round(sample(c(0,0.5,1), size =1, prob = c(0.6, 0.3, 0.1))*sqrt(val), 0), ]
         draftOrder[val,c(4:7)] <- pick
@@ -125,7 +128,6 @@ simulateStandardDraft <- function(year, NumberOfSimulations) {
   return(returnme)
 }
 
-x<- simulate0RBDraft("2021", 2)
 #function to simulate drafts 0RB standard strategy
 simulate0RBDraft <- function(year, NumberOfSimulations) {
   ZeroTeam <- "team_1"
@@ -143,12 +145,15 @@ simulate0RBDraft <- function(year, NumberOfSimulations) {
         add_column(PlayerID = NA) %>%
         add_column(Name = NA) %>%
         add_column(Position = NA) 
-      remainingPlayers <- adp_data[[year]] %>% select(c("Rank", "PlayerID", "Name", "Position"))
+      remainingPlayers <- adp_data[[year]] %>% 
+        select(c("Rank", "PlayerID", "Name", "Position")) %>%
+        filter(Position != "CB", Position != "SS", Position != "DE", 
+        Position != "OLB", Position != "ILB", Position != "FB")
       remainingPlayersPosFilter <-remainingPlayers
       positionTable <- c()
       for (val in draftPick) {
         if (draftOrder[val,"teamPick"] != ZeroTeam) {
-          if (val<=100) {
+          if (val<=90) {
             roster <- filter(draftOrder, teamPick == draftOrder[val, "teamPick"])
             positionTable <- data.frame(table(roster$Position)) 
             positionTable <- positionTable %>%  mutate(is_pos_full = mapply(full_func, positionTable$Var1, positionTable$Freq))
@@ -158,7 +163,7 @@ simulate0RBDraft <- function(year, NumberOfSimulations) {
             draftOrder[val,c(4:7)] <- pick
             remainingPlayers <- filter(remainingPlayers, PlayerID != pick$PlayerID)
           }
-          else if (val>=100 & val<=140) {
+          else if (val>=91 & val<=140) {
             roster <- filter(draftOrder, teamPick == draftOrder[val, "teamPick"])
             pick <- remainingPlayers[1+round(sample(c(0,0.5,1), size =1, prob = c(0.6, 0.3, 0.1))*sqrt(val), 0), ]
             draftOrder[val,c(4:7)] <- pick
@@ -195,12 +200,16 @@ simulate0RBDraft <- function(year, NumberOfSimulations) {
         }
         else if (draftOrder[val,"teamPick"] == ZeroTeam){
           if (val<=40) {
-            remainingPlayersSanRB<- filter(remainingPlayers, Position !="RB")
-            pick <- remainingPlayersSanRB[1+round(sample(c(0,0.5,1), size =1, prob = c(0.6, 0.3, 0.1))*sqrt(val), 0), ]
+            roster <- filter(draftOrder, teamPick == draftOrder[val, "teamPick"])
+            positionTable <- data.frame(table(roster$Position)) 
+            positionTable <- positionTable %>%  mutate(is_pos_full = mapply(full_func, positionTable$Var1, positionTable$Freq))
+            fullPositions <- c(as.vector(positionTable[positionTable$is_pos_full == "Yes", 1]), "K", "DST", "RB")
+            remainingPlayersPosFilter <- filter(remainingPlayers, !(Position %in% fullPositions))
+            pick <- remainingPlayersPosFilter[1+round(sample(c(0,0.5,1), size =1, prob = c(0.6, 0.3, 0.1))*sqrt(val), 0), ]
             draftOrder[val,c(4:7)] <- pick
             remainingPlayers <- filter(remainingPlayers, PlayerID != pick$PlayerID)
           }
-          else if (val>= 41 & val<=100) {
+          else if (val>= 41 & val<=90) {
             roster <- filter(draftOrder, teamPick == draftOrder[val, "teamPick"])
             positionTable <- data.frame(table(roster$Position)) 
             positionTable <- positionTable %>%  mutate(is_pos_full = mapply(full_func, positionTable$Var1, positionTable$Freq))
@@ -210,7 +219,7 @@ simulate0RBDraft <- function(year, NumberOfSimulations) {
             draftOrder[val,c(4:7)] <- pick
             remainingPlayers <- filter(remainingPlayers, PlayerID != pick$PlayerID)
           }
-          else if (val>=100 & val<=140) {
+          else if (val>=91 & val<=140) {
             roster <- filter(draftOrder, teamPick == draftOrder[val, "teamPick"])
             pick <- remainingPlayers[1+round(sample(c(0,0.5,1), size =1, prob = c(0.6, 0.3, 0.1))*sqrt(val), 0), ]
             draftOrder[val,c(4:7)] <- pick
@@ -268,7 +277,7 @@ simulate0RBDraft <- function(year, NumberOfSimulations) {
 
 standard <- c()
 zero <- c()
-simulations <- 1000
+simulations <- 10
 for(year in years){
   standard <- rbind(standard, simulateStandardDraft(year, simulations))
   print(year)
@@ -279,8 +288,17 @@ zero <- rbind(zero, simulate0RBDraft(year, simulations))
 print(year)
 }
 
-data <- rbind(standard, zero)
-write.csv(data, "0514sims.csv")
+data <- rbind(standard, zero) %>%
+  select(-c(Name.y, Position.y)) %>%
+  rename(name = Name.x) %>%
+  rename(rank_pre = Rank.x) %>%
+  rename(position = Position.x) %>%
+  rename(rank_post = Rank.y) %>%
+  mutate(rosterID = paste(teamPick, simulation, yr, Strategy, sep = "")) %>%
+  mutate(teamPick = as.integer(sub(".*_", "", teamPick))) %>%
+  mutate(pickBin = if_else(teamPick <= 3, "Early (Picks 1-3)", if_else(teamPick >3 & teamPick <8, "Mid (Picks 4-7)", "Late (Picks 8-10)")))
+
+write.csv(data, "0518sims.csv")
 
 
 
