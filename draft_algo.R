@@ -10,8 +10,6 @@ adpFiles <- paste0("standard_scoring_adp/adp_", 2017:2021, ".csv")
 adp_data <- lapply(adpFiles, read.csv)
 names(adp_data) <- (2017:2021)
 
-
-
 pointsFiles <- paste0("standard_points_scored/", 2017:2021, ".csv")
 points_data <- lapply(pointsFiles, read.csv)
 names(points_data) <- (2017:2021)
@@ -24,9 +22,7 @@ set.seed(5)
 teams <- c("team_1", "team_2", "team_3", "team_4", "team_5", "team_6", "team_7",
            "team_8", "team_9", "team_10")
 years <- c("2017", "2018","2019","2020","2021")
-#draftPick <- c(1:160)
-#round <- rep(c(1:16),each=10)
-#teamPick <- rep(c(teams, rev(teams)), times =8)
+
 
 #function to tell if roster is full at position
 full_func <- function(position, count){
@@ -299,12 +295,3 @@ data <- rbind(standard, zero) %>%
   mutate(pickBin = if_else(teamPick <= 3, "Early (Picks 1-3)", if_else(teamPick >3 & teamPick <8, "Mid (Picks 4-7)", "Late (Picks 8-10)")))
 
 write.csv(data, "0518sims.csv")
-
-
-
-
-
-
-
-
-
