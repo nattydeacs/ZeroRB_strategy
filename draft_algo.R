@@ -277,7 +277,7 @@ simulate0RBDraft <- function(year, NumberOfSimulations) {
 
 standard <- c()
 zero <- c()
-simulations <- 10
+simulations <- 500
 for(year in years){
   standard <- rbind(standard, simulateStandardDraft(year, simulations))
   print(year)
